@@ -1,0 +1,192 @@
+"""
+Name : Final Project To-Do list
+Author: Lilen Rockwell
+Created: 3/19/24
+Course: CIS 152 - Data Structure
+Version: 1.0
+OS: Windows 11 Pro 22621.2861
+IDE: PyCharm 2023.3.2
+Copyright: This is my own original work based on specifications issued by our instructor
+Description: Creating a map data structure
+            Input: GUI inputs from user
+            Output: GUI prints the list of user inputs, creates popups, and displays aspects of the list
+            BigO: O(n^2)
+Academic Honesty: I attest that this is my original work. I have not used unauthorized source code, either modified or
+unmodified. I have not given other fellow student(s) access to my program.
+"""
+import tkinter as tk
+
+"""
+There were a few resources I used to help me with this project, here are links to them for credit 
+Used for listbox click event:
+https://stackoverflow.com/questions/6554805/getting-a-callback-when-a-tkinter-listbox-selection-is-changed
+Used for sorting todo_list:
+https://www.geeksforgeeks.org/python-sort-list-according-second-element-sublist/
+"""
+
+class main_window():
+    def __init__(self):
+        # basic lists and main window
+        self.todo_list = []
+        self.remove_index = 0
+        self.tasks_completed = 0
+        self.reward_list = []
+        self.window = tk.Tk()
+
+        # task frame
+        self.task_frame = tk.Frame(self.window, padx=10, pady=10)
+        self.task_frame.pack(side='left')
+
+        self.task_title = tk.Label(self.task_frame, text='TASKS')
+        self.task_title.pack()
+
+        # task button/labels
+        self.task_name_label = tk.Label(self.task_frame, text='Task Name: ')
+        self.task_name_label.pack()
+        self.task_name_enter = tk.Entry(self.task_frame)
+        self.task_name_enter.pack()
+
+        self.task_priority_label = tk.Label(self.task_frame, text='Task Priority: ')
+        self.task_priority_label.pack()
+        self.task_priority_enter = tk.Entry(self.task_frame)
+        self.task_priority_enter.pack()
+
+        self.add_task_button = tk.Button(self.task_frame, text='Add Task', command=self.add_task)
+        self.add_task_button.pack()
+
+        # task list
+        self.display_list = tk.Listbox(self.task_frame)
+        self.display_list.pack()
+        self.display_list.bind('<<ListboxSelect>>', self.click_task)
+
+        # reward frame
+        self.reward_frame = tk.Frame(self.window)
+        self.reward_frame.pack(side='right', padx=10, pady=10)
+
+        self.reward_title = tk.Label(self.reward_frame, text='REWARDS')
+        self.reward_title.pack()
+
+        # reward button/labels
+        self.reward_name_label = tk.Label(self.reward_frame, text='Reward Name: ')
+        self.reward_name_label.pack()
+        self.reward_name_enter = tk.Entry(self.reward_frame)
+        self.reward_name_enter.pack()
+
+        self.reward_amt_label = tk.Label(self.reward_frame, text='Reward Amount: ')
+        self.reward_amt_label.pack()
+        self.reward_amt_enter = tk.Entry(self.reward_frame)
+        self.reward_amt_enter.pack()
+
+        self.add_task_button = tk.Button(self.reward_frame, text='Add Reward', command=self.add_reward)
+        self.add_task_button.pack()
+
+        # reward list
+        self.display_reward_list = tk.Listbox(self.reward_frame)
+        self.display_reward_list.pack()
+        # self.display_reward_list.bind('<<ListboxSelect>>', self.click_task)
+
+        # start window
+        self.window.mainloop()
+
+    def add_task(self):
+        # ensures task boxes are not empty
+        if self.task_name_enter.get() == '' or self.task_priority_enter.get() == '':
+            pass
+        else:
+            # adds new task to a list, inserts it into the todo list
+            temp = [self.task_name_enter.get(), self.task_priority_enter.get()]
+            self.todo_list.append(temp)
+            self.task_name_enter.delete(0, tk.END)
+            self.task_priority_enter.delete(0, tk.END)
+            self.refresh_task_list()
+
+    # when a new task item is added, refresh the to-do list menu
+    def refresh_task_list(self):
+        # sorts the list by priority
+        redone = sorted(self.todo_list, key=lambda b: b[1])
+        self.todo_list = redone
+
+        # puts sorted list into display
+        self.display_list.delete(0, tk.END)
+        for x in range(0, len(self.todo_list)):
+            self.display_list.insert(x, self.todo_list[x])
+
+    # when clicked on, opens a text box to confirm yes/no to remove task
+    def click_task(self, event):
+        w = event.widget
+        index = int(w.curselection()[0])
+        value = w.get(index)
+        self.remove_index = index
+
+        self.confirm_window = tk.Toplevel(self.window)
+        confirmation = tk.Label(self.confirm_window, text="Did you complete the task?")
+        confirmation.pack()
+        task = tk.Label(self.confirm_window, text=value)
+        task.pack()
+
+        remove_button = tk.Button(self.confirm_window, text='Yes', command=self.remove_task)
+        remove_button.pack()
+
+        close_button = tk.Button(self.confirm_window, text='No', command=self.confirm_window.destroy)
+        close_button.pack()
+
+    # removes task and closes popup window
+    def remove_task(self):
+        self.todo_list.pop(self.remove_index)
+        self.refresh_task_list()
+        self.tasks_completed += 1
+        self.reward_popup()
+        self.confirm_window.destroy()
+
+    # adds item to reward list
+    def add_reward(self):
+        # checks to see if reward boxes are empty
+        if self.reward_name_enter.get() == '' or self.reward_amt_enter.get() == '':
+            pass
+        else:
+            # input validation for num only
+            try:
+                reward_num = int(self.reward_amt_enter.get())
+                temp = [self.reward_name_enter.get(), reward_num]
+                self.reward_list.append(temp)
+                self.refresh_reward_list()
+            except ValueError:
+                pass
+            finally:
+                self.reward_name_enter.delete(0, tk.END)
+                self.reward_amt_enter.delete(0, tk.END)
+
+    def refresh_reward_list(self):
+        # sorts the list by number of tasks until reward
+        redone = sorted(self.reward_list, key=lambda b: b[1])
+        self.todo_list = redone
+
+        # puts sorted list into display
+        self.display_reward_list.delete(0, tk.END)
+        for x in range(0, len(self.reward_list)):
+            self.display_reward_list.insert(x, self.reward_list[x])
+
+    # when a certain number of tasks is accomplished, gives earned rewards
+    def reward_popup(self):
+        # goes through reward list
+        for x in self.reward_list:
+            # if reward is found, have a popup window for reward and remove reward once it's been claimed
+            if x[1] <= self.tasks_completed:
+                print(x[1])
+                self.celebrate_window = tk.Toplevel(self.window)
+                confirmation = tk.Label(self.confirm_window, text="Reward!")
+                confirmation.pack()
+                reward_label = tk.Label(self.celebrate_window, text='You got a reward!')
+                reward_label.pack()
+                reward = tk.Label(self.celebrate_window, text=x[0])
+                reward.pack()
+
+                self.reward_list.remove(x)
+                self.refresh_reward_list()
+                remove_button = tk.Button(self.celebrate_window, text='Yay!', command=self.celebrate_window.destroy)
+                remove_button.pack()
+                break
+
+
+if __name__ == '__main__':
+    main_window()
