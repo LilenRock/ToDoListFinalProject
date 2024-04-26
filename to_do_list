@@ -159,7 +159,7 @@ class main_window():
     def refresh_reward_list(self):
         # sorts the list by number of tasks until reward
         redone = sorted(self.reward_list, key=lambda b: b[1])
-        self.todo_list = redone
+        self.reward_list = redone
 
         # puts sorted list into display
         self.display_reward_list.delete(0, tk.END)
